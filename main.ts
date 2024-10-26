@@ -2,15 +2,13 @@ import { config } from "./config.ts";
 import { bot } from "./bot/bot.ts";
 import { handleApiRequest } from "./api/routes.ts";
 
-const port = config.port;
-
 // Start the bot
 await bot.start({
     drop_pending_updates: true,
 });
 
 // HTTP server to handle API and webhook requests
-Deno.serve({ port }, async (req) => {
+Deno.serve(async (req: Request) => {
     const url = new URL(req.url);
 
     if (req.method === "POST" && url.pathname === "/webhook") {
