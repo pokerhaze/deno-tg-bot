@@ -4,5 +4,10 @@
   },
   "tasks": {
     "start": "deno run --allow-net --allow-env main.ts"
+  },
+  "deploy": {
+    "exclude": [],
+    "include": [],
+    "entrypoint": "main.ts"
   }
 }
