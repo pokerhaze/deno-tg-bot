@@ -22,7 +22,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (req.method === "GET") {
-        return await handleApiRequest(req);
+        return handleApiRequest(req);
     }
 
     return new Response("Method not allowed", { status: 405 });
