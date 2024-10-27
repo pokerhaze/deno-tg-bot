@@ -1,16 +1,25 @@
 import { Bot } from "grammy";
+import { MessageHandler } from "./messageHandler.ts";
+import { MqttService } from "../services/mqtt.ts";
+import { config } from "../config.ts";
 
 export function setupHandlers(bot: Bot) {
-    bot.command("start", async (ctx) => {
-        await ctx.reply("Hello! I am your Deno Telegram bot with a REST API.");
+    const mqttService = new MqttService(config.mqtt.brokerUrl);
+    const messageHandler = new MessageHandler(mqttService);
+
+    bot.command("start", (ctx) => messageHandler.handleStart(ctx));
+    bot.on("message", (ctx) => messageHandler.handleMessage(ctx));
+
+    // Use Deno's built-in shutdown signal handling
+    Deno.addSignalListener("SIGINT", async () => {
+        console.log("Shutting down...");
+        await mqttService.close();
+        Deno.exit(0);
     });
 
-    bot.on("message", async (ctx) => {
-        const messageText = ctx.message?.text;
-        if (messageText) {
-            await ctx.reply(`You said: ${messageText}`);
-        } else {
-            await ctx.reply("I received a message without text.");
-        }
+    Deno.addSignalListener("SIGTERM", async () => {
+        console.log("Shutting down...");
+        await mqttService.close();
+        Deno.exit(0);
     });
 }
