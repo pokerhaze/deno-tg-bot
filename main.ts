@@ -1,10 +1,25 @@
-import { bot } from "./bot/bot.ts";
-import { handleApiRequest } from "./api/routes.ts";
+import { Bot, Context } from "https://deno.land/x/grammy@v1.10.1/mod.ts";
+
+// Get the bot token from the environment
+const token = Deno.env.get("BOT_TOKEN");
+if (!token) throw new Error("Bot token is not defined in the environment variables.");
+// Create a bot instance
+const bot = new Bot(token);
+// Handle the /start command
+bot.command("start", (ctx: Context) => {
+    ctx.reply("Hello! I am your Deno Telegram bot with a REST API.");
+});
+// Echo back any received messages
+bot.on("message", (ctx: Context) => {
+    ctx.reply(`You said: ${ctx.message.text}`);
+});
+// Start the bot in the background
+bot.start({
+    onStart: () => console.log("Telegram bot started!"),
+});
 
 // Start the bot
-bot.start({
-    drop_pending_updates: true,
-});
+// bot.start();
 
 // HTTP server to handle API and webhook requests
 // Deno.serve(async (req: Request) => {
