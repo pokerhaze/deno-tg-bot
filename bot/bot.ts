@@ -5,5 +5,14 @@ import { setupErrorHandler } from "./errorHandler.ts";
 
 export const bot = new Bot(config.token);
 
-setupHandlers(bot);
-setupErrorHandler(bot);
+// Make initialization async
+export async function initializeBot() {
+    try {
+        await setupHandlers(bot);
+        setupErrorHandler(bot);
+        return bot;
+    } catch (error) {
+        console.error("Error initializing bot:", error);
+        throw error;
+    }
+}
