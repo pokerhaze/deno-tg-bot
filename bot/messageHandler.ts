@@ -20,10 +20,8 @@ export class MessageHandler {
                 timestamp: new Date().toISOString()
             };
 
-            await Promise.all([
-                this.mqttService.publish(config.mqtt.topic, JSON.stringify(messageData)),
-                ctx.reply(`You said: ${messageText}`)
-            ]);
+            this.mqttService.publish(config.mqtt.topic, JSON.stringify(messageData));
+            ctx.reply(`You said: ${messageText}`);
         } catch (error) {
             console.error("Error handling message:", error);
             await ctx.reply("Sorry, there was an error processing your message.");

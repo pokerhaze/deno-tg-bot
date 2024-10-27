@@ -55,19 +55,18 @@ export class MqttService {
             this.client.connect();
         } catch (error) {
             console.error("Connection error:", error);
-            this.handleReconnect();
+            this.handleReconnect().then(r => r);
         }
     }
 
-    async publish(topic: string, message: string): Promise<void> {
+    publish(topic: string, message: string) {
         if (!this.connected) {
             // Instead of throwing an error, just log the message
             console.warn("Message queued - MQTT not connected:", message);
-            return;
         }
 
         try {
-            await this.client.publish(topic, message);
+            this.client.publish(topic, message);
             console.log("Message published successfully");
         } catch (error) {
             console.error("Error publishing to MQTT:", error);
