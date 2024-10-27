@@ -1,7 +1,10 @@
-import { handleApiRequest } from "./api/routes.ts";
 import { bot } from "./bot/bot.ts";
+import { handleApiRequest } from "./api/routes.ts";
+
 // Start the bot
-bot.start();
+await bot.start({
+    drop_pending_updates: true,
+});
 
 // HTTP server to handle API and webhook requests
 Deno.serve(async (req: Request) => {
