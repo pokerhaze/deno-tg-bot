@@ -28,13 +28,13 @@ export class MqttService {
         this.client.on("error", (err: Error) => {
             console.error("MQTT error:", err);
             this.connected = false;
-            this.handleReconnect();
+            this.handleReconnect().then(r => r);
         });
 
         this.client.on("close", () => {
             console.log("MQTT connection closed");
             this.connected = false;
-            this.handleReconnect();
+            this.handleReconnect().then(r => r);
         });
     }
 

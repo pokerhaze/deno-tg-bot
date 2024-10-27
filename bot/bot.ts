@@ -6,9 +6,9 @@ import { setupErrorHandler } from "./errorHandler.ts";
 export const bot = new Bot(config.token);
 
 // Make initialization async
-export async function initializeBot() {
+export function initializeBot() {
     try {
-        await setupHandlers(bot);
+        setupHandlers(bot);
         setupErrorHandler(bot);
         return bot;
     } catch (error) {

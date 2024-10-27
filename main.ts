@@ -1,7 +1,9 @@
-import { bot } from "./bot/bot.ts";
+import { initializeBot } from "./bot/bot.ts";
 import { handleApiRequest } from "./api/routes.ts";
 
 try {
+    const bot = initializeBot();
+
     // Run bot and server concurrently
     Promise.all([
         // Start the bot with long polling
@@ -18,10 +20,10 @@ try {
         })
     ]).then(() => console.log("Bot and server started!"))
         .catch((error) => {
-            console.error("Error in main services:", error);
-            // Don't exit, try to keep the service running
+            console.error("Error starting services:", error);
+            Deno.exit(1);
         });
 } catch (error) {
-    console.error("Fatal error in main:", error);
+    console.error("Fatal initialization error:", error);
     Deno.exit(1);
 }
