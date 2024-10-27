@@ -1,64 +1,77 @@
+// services/mqtt.ts
 import { Client } from "https://deno.land/x/mqtt@0.1.2/deno/mod.ts";
 
 export class MqttService {
     private client: Client;
     private connected = false;
-    private connectionPromise: Promise<void>;
+    private retryCount = 0;
+    private maxRetries = 3;
+    private retryDelay = 2000; // 2 seconds
 
-    constructor(brokerUrl: string) {
+    constructor(private brokerUrl: string) {
         this.client = new Client({ url: brokerUrl });
-        this.connectionPromise = this.connect();
+        this.setupConnection();
     }
 
-    private async connect(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            // Set a connection timeout
-            const timeout = setTimeout(() => {
-                reject(new Error("MQTT connection timeout"));
-            }, 5000);
+    private setupConnection() {
+        this.setupEventHandlers();
+        this.connect();
+    }
 
-            this.client.on("connect", () => {
-                console.log("Connected to MQTT broker");
-                this.connected = true;
-                clearTimeout(timeout);
-                resolve();
-            });
+    private setupEventHandlers() {
+        this.client.on("connect", () => {
+            console.log("Connected to MQTT broker");
+            this.connected = true;
+            this.retryCount = 0;
+        });
 
-            this.client.on("error", (err: Error) => {
-                console.error("MQTT error:", err);
-                this.connected = false;
-                clearTimeout(timeout);
-                reject(err);
-            });
+        this.client.on("error", (err: Error) => {
+            console.error("MQTT error:", err);
+            this.connected = false;
+            this.handleReconnect();
+        });
 
-            this.client.on("close", () => {
-                console.log("MQTT connection closed");
-                this.connected = false;
-            });
-
-            // Initiate connection
-            this.client.connect().catch((err) => {
-                clearTimeout(timeout);
-                reject(err);
-            });
+        this.client.on("close", () => {
+            console.log("MQTT connection closed");
+            this.connected = false;
+            this.handleReconnect();
         });
     }
 
-    async publish(topic: string, message: string): Promise<void> {
+    private async handleReconnect() {
+        if (this.retryCount < this.maxRetries) {
+            this.retryCount++;
+            console.log(`Attempting reconnection ${this.retryCount}/${this.maxRetries}...`);
+            await new Promise(resolve => setTimeout(resolve, this.retryDelay));
+            this.connect();
+        } else {
+            console.error("Max reconnection attempts reached");
+        }
+    }
+
+    private connect() {
         try {
-            // Wait for connection before proceeding
-            await this.connectionPromise;
+            console.log("Connecting to MQTT broker...");
+            this.client.connect();
+        } catch (error) {
+            console.error("Connection error:", error);
+            this.handleReconnect();
+        }
+    }
 
-            if (!this.connected) {
-                // If connection was lost after initial connect, try to reconnect
-                this.connectionPromise = this.connect();
-                await this.connectionPromise;
-            }
+    async publish(topic: string, message: string): Promise<void> {
+        if (!this.connected) {
+            // Instead of throwing an error, just log the message
+            console.warn("Message queued - MQTT not connected:", message);
+            return;
+        }
 
+        try {
             await this.client.publish(topic, message);
+            console.log("Message published successfully");
         } catch (error) {
             console.error("Error publishing to MQTT:", error);
-            throw error;
+            // Don't throw the error, just log it
         }
     }
 
@@ -70,7 +83,6 @@ export class MqttService {
             }
         } catch (error) {
             console.error("Error closing MQTT connection:", error);
-            throw error;
         }
     }
 }
