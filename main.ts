@@ -2,7 +2,7 @@ import { bot } from "./bot/bot.ts";
 import { handleApiRequest } from "./api/routes.ts";
 
 // Start the bot
-bot.start({
+await bot.start({
     drop_pending_updates: true,
 });
 
